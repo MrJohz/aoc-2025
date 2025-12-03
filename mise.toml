@@ -16,6 +16,21 @@ run = 'pnpm install'
 sources = ['package.json', 'pnpm-lock.yaml', 'mise.toml']
 outputs = ['node_modules/.pnpm/lock.yaml']
 
+[tasks.compile-wasm]
+description = "Compiles .wat files to .wasm files"
+sources = ["src/**/*.wat"]
+outputs = { auto = true }
+run = '''
+{% for file in task_source_files() %}
+wat2wasm {{ file }} -o {{ file | replace(from=".wat", to=".wasm") }} \
+  --enable-tail-call
+{% endfor %}
+'''
+
 [tasks.test]
-run = "pnpm run test"
-depends = ["pnpm-install"]
+run = "node --test"
+depends = ["pnpm-install", "compile-wasm"]
+
+[tasks.check]
+run = "pnpm run check"
+depends = ["pnpm-install", "compile-wasm"]
