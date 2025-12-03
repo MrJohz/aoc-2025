@@ -19,7 +19,7 @@
 
     (return (local.get $char)))
 
-  (func $parse-number (result i32)
+  (func $parse-number (export "parse_number") (result i32)
     (local $number i32)
     (local $char i32)
 
@@ -47,4 +47,51 @@
       (if (result i32) (i32.eq (call $read-byte) (i32.const 76))
         (then (i32.sub (i32.const 0) (call $parse-number)))
         (else (call $parse-number)))))
+
+  (func $eq-zero (export "eq_zero") (param $value i32) (result i32)
+    (return
+      (i32.eq
+        (i32.rem_s (local.get $value) (i32.const 100))
+        (i32.const 0))))
+
+  (func $pass-thru-zero (export "pass_thru_zero") (param $diff i32) (param $end i32) (result i32)
+    (local $rotations i32)
+    (local.set $rotations (i32.div_s (local.get $diff) (i32.const 100)))
+
+    ;; TODO: i32.abs on the rotations, use the rem to get the last partjj
+    (return ))
+
+  (func $part1 (export "part1") (param $length i32) (result i32)
+    (local $rotation i32)
+    (local $count-zeroes i32)
+
+    (local.set $rotation (i32.const 50))
+    (local.set $count-zeroes (i32.const 0))
+    
+    loop $loop-start
+      (local.set $rotation (i32.add (local.get $rotation) (call $parse-line)))
+      (local.set $count-zeroes (i32.add (local.get $count-zeroes) (call $eq-zero (local.get $rotation))))
+
+      (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
+    end
+    
+    (return (local.get $count-zeroes)))
+
+  (func $part2 (export "part2") (param $length i32) (result i32)
+    (local $rotation i32)
+    (local $count-zeroes i32)
+    (local $diff i32)
+    
+    (local.set $rotation (i32.const 50))
+    (local.set $count-zeroes (i32.const 0))
+    
+    loop $loop-start
+      (local.set $diff (call $parse-line))
+      (local.tee $rotation (i32.add (local.get $rotation) (local.get $diff)))
+      (local.set $count-zeroes (i32.add (local.get $count-zeroes) (call $pass-thru-zero (local.get $diff))))
+
+      (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
+    end
+    
+    (return (local.get $count-zeroes)))
 )
