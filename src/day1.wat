@@ -1,9 +1,5 @@
 (module
   (memory (import "import" "file") 1)
-  (func $__log (import "console" "log") (param i32))
-  (func $log (param $p i32) (result i32)
-    (call $__log (local.get $p))
-    (return (local.get $p)))
   
   (global $offset (mut i32) (i32.const 0))
 
@@ -51,12 +47,6 @@
       (if (result i32) (i32.eq (call $read-byte) (i32.const 76))
         (then (i32.sub (i32.const 0) (call $parse-number)))
         (else (call $parse-number)))))
-
-  (func $eq-zero (export "eq_zero") (param $value i32) (result i32)
-    (return
-      (i32.eq
-        (i32.rem_s (local.get $value) (i32.const 100))
-        (i32.const 0))))
 
   (func $handle-left (param $start i32) (param $rotation i32) (result i32 i32)
     (local $rots i32)
