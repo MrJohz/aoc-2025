@@ -3,7 +3,7 @@ import test, { type TestContext } from "node:test";
 
 type Exports = {
   eq_zero: (n: number) => number;
-  pass_thru_zero: (diff: number, end: number) => number;
+  pass_thru_zero: (start: number, end: number) => number;
   parse_line: () => number;
   part1: (length: number) => number;
   part2: (length: number) => number;
@@ -75,17 +75,30 @@ test("day one", async (t) => {
         [101, -2, 1],
         [1, 1000, 10],
         [1, -1000, 10],
+        [-1, 1000, 10],
+        [-1, -1000, 10],
         [99, 101, 2],
         [99, 100, 1],
+        // from the sample input
+        [50, -68, 1],
+        [-18, -30, 0],
+        [-48, 48, 1],
+        [0, -5, 0],
+        [-5, 60, 1],
+        [55, -55, 1],
+        [0, -1, 0],
+        [-1, -99, 1],
+        [-100, 14, 0],
+        [-86, -82, 1],
       ] as const) {
         t.test(`${start} + ${diff} -> ${output}`, async (t: TestContext) => {
           const [, file] = createMemory(Buffer.from(""));
           const { instance } = await compile({ import: { file } });
           const exports = instance.exports as Exports;
-          t.assert.equal(exports.pass_thru_zero(diff, start + diff), output);
+          t.assert.equal(exports.pass_thru_zero(start, start + diff), output);
         });
       }
-    }
+    },
   );
 
   t.test("handles sample input for part 1", async (t: TestContext) => {
@@ -102,8 +115,8 @@ L1
 L99
 R14
 L82
-`.trim() + "\n"
-      )
+`.trim() + "\n",
+      ),
     );
 
     const { instance } = await compile({ import: { file } });
@@ -126,8 +139,8 @@ L1
 L99
 R14
 L82
-`.trim() + "\n"
-      )
+`.trim() + "\n",
+      ),
     );
 
     const { instance } = await compile({ import: { file } });
@@ -153,6 +166,6 @@ L82
       const exports = instance.exports as Exports;
 
       t.assert.equal(exports.part2(length), 0);
-    }
+    },
   );
 });
