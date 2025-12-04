@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import test, { type TestContext } from "node:test";
 
 type Exports = {
+  handle_row: (start: number, rotation: number) => [number, number];
   eq_zero: (n: number) => number;
   pass_thru_zero: (start: number, end: number) => number;
   parse_line: () => number;
@@ -45,64 +46,36 @@ test("day one", async (t) => {
     }
   });
 
-  t.test("can detect when the dial is at zero", async (t: TestContext) => {
-    for (const [input, output] of [
-      [-1, 0],
-      [0, 1],
-      [1, 0],
-      [99, 0],
-      [100, 1],
-      [101, 0],
-      [-99, 0],
-      [-100, 1],
-      [-101, 0],
-    ] as const) {
-      t.test(`${input} -> ${output}`, async (t: TestContext) => {
-        const [, file] = createMemory(Buffer.from(""));
-        const { instance } = await compile({ import: { file } });
-        const exports = instance.exports as Exports;
-        t.assert.equal(output, exports.eq_zero(input));
-      });
-    }
-  });
+  t.test("handles a turn of the wheel", async (t: TestContext) => {
+    for (const [start, rotation, end, turns] of [
+      [0, 5, 5, 0],
+      [0, 99, 99, 0],
+      [1, 99, 0, 1],
+      [5, 1000, 5, 10],
 
-  t.test(
-    "can detect when the dial has passed through zero",
-    async (t: TestContext) => {
-      for (const [start, diff, output] of [
-        [1, 1, 0],
-        [99, 1, 1],
-        [99, 2, 1],
-        [99, -1, 0],
-        [0, 1, 0],
-        [101, -2, 1],
-        [1, 1000, 10],
-        [1, -1000, 10],
-        [-1, 1000, 10],
-        [-1, -1000, 10],
-        [99, 101, 2],
-        [99, 100, 1],
-        // from the sample input
-        [50, -68, 1],
-        [-18, -30, 0],
-        [-48, 48, 1],
-        [0, -5, 0],
-        [-5, 60, 1],
-        [55, -55, 1],
-        [0, -1, 0],
-        [-1, -99, 1],
-        [-100, 14, 0],
-        [-86, -82, 1],
-      ] as const) {
-        t.test(`${start} + ${diff} -> ${output}`, async (t: TestContext) => {
+      // cases from sample input
+      [50, -68, 82, 1],
+      [82, -30, 52, 0],
+      [52, 48, 0, 1],
+      [0, -5, 95, 0],
+      [95, 60, 55, 1],
+      [55, -55, 0, 1],
+      [0, -1, 99, 0],
+      [-1, -99, 0, 1],
+      [0, 14, 14, 0],
+      [14, -82, 32, 1],
+    ] as const) {
+      t.test(
+        `${start} + ${rotation} -> ${end}/${turns}`,
+        async (t: TestContext) => {
           const [, file] = createMemory(Buffer.from(""));
           const { instance } = await compile({ import: { file } });
           const exports = instance.exports as Exports;
-          t.assert.equal(exports.pass_thru_zero(start, start + diff), output);
-        });
-      }
-    },
-  );
+          t.assert.deepEqual([end, turns], exports.handle_row(start, rotation));
+        }
+      );
+    }
+  });
 
   t.test("handles sample input for part 1", async (t: TestContext) => {
     const [length, file] = createMemory(
@@ -118,8 +91,8 @@ L1
 L99
 R14
 L82
-`.trim() + "\n",
-      ),
+`.trim() + "\n"
+      )
     );
 
     const { instance } = await compile({ import: { file } });
@@ -142,14 +115,14 @@ L1
 L99
 R14
 L82
-`.trim() + "\n",
-      ),
+`.trim() + "\n"
+      )
     );
 
     const { instance } = await compile({ import: { file } });
     const exports = instance.exports as Exports;
 
-    t.assert.equal(exports.part2(length), 5);
+    t.assert.equal(exports.part2(length), 6);
   });
 
   t.test("finds the correct solution to part 1", async (t: TestContext) => {
@@ -160,15 +133,11 @@ L82
     t.assert.equal(exports.part1(length), 1097);
   });
 
-  t.test(
-    "finds the correct solution to part 2",
-    { skip: true },
-    async (t: TestContext) => {
-      const [length, file] = await readInput();
-      const { instance } = await compile({ import: { file } });
-      const exports = instance.exports as Exports;
+  t.test("finds the correct solution to part 2", async (t: TestContext) => {
+    const [length, file] = await readInput();
+    const { instance } = await compile({ import: { file } });
+    const exports = instance.exports as Exports;
 
-      t.assert.equal(exports.part2(length), 0);
-    },
-  );
+    t.assert.equal(exports.part2(length), 7101);
+  });
 });

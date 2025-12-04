@@ -58,27 +58,44 @@
         (i32.rem_s (local.get $value) (i32.const 100))
         (i32.const 0))))
 
-  (func $pass-thru-zero (export "pass_thru_zero") (param $start i32) (param $end i32) (result i32)
-    (local $changes i32)
-    (local $scratch i32)
+  (func $handle-left (param $start i32) (param $rotation i32) (result i32 i32)
+    (local $rots i32)
+    
+    (local.set $rots (i32.div_s (local.get $rotation) (i32.const 100)))
+    (if (i32.eq (local.get $start) (i32.const 0))
+      (then (local.set $rots (i32.sub (local.get $rots) (i32.const 1)))))
 
-    (local.set $scratch (i32.div_s (local.get $start) (i32.const 100)))
-    (if (result i32) (i32.lt_s (local.get $start) (i32.const 0))
-      (then (i32.add (i32.const -1) (local.get $scratch)))
-      (else (local.get $scratch)))
-    call $log
-    (local.set $scratch (i32.div_s (local.get $end) (i32.const 100)))
-    (if (result i32) (i32.lt_s (local.get $end) (i32.const 0))
-      (then (i32.add (i32.const -1) (local.get $scratch)))
-      (else (local.get $scratch)))
-    call $log
-    (local.set $changes (i32.sub))
+    (local.set $start
+      (i32.sub
+        (local.get $start)
+        (i32.rem_s (local.get $rotation) (i32.const 100))))
+    
+    (if (i32.le_s (local.get $start) (i32.const 0))
+      (then (local.set $rots (i32.add (local.get $rots) (i32.const 1)))))
+    (if (i32.lt_s (local.get $start) (i32.const 0))
+      (then (local.set $start (i32.add (local.get $start) (i32.const 100)))))
+    
+    (return (local.get $start) (local.get $rots)))
 
-    (if (result i32) (i32.lt_s (local.get $changes) (i32.const 0))
-      (then (i32.sub (i32.const 0) (local.get $changes)))
-      (else (local.get $changes)))
+  (func $handle-right (param $start i32) (param $rotation i32) (result i32 i32)
+    (local $rots i32)
+    
+    (local.set $rots (i32.div_s (local.get $rotation) (i32.const 100)))
+    (local.set $start
+      (i32.add
+        (local.get $start)
+        (i32.rem_s (local.get $rotation) (i32.const 100))))
+    (if (i32.ge_s (local.get $start) (i32.const 100))
+      (then 
+        (local.set $start (i32.sub (local.get $start) (i32.const 100)))
+        (local.set $rots (i32.add (local.get $rots) (i32.const 1)))))
+    
+    (return (local.get $start) (local.get $rots)))
 
-    (return))
+  (func $handle-row (export "handle_row") (param $start i32) (param $rotation i32) (result i32 i32)
+    (if (result i32 i32) (i32.gt_s (local.get $rotation) (i32.const 0))
+      (then (return_call $handle-right (local.get $start) (local.get $rotation)))
+      (else (return_call $handle-left (local.get $start) (i32.sub (i32.const 0) (local.get $rotation))))))
 
   (func $part1 (export "part1") (param $length i32) (result i32)
     (local $rotation i32)
@@ -88,8 +105,11 @@
     (local.set $count-zeroes (i32.const 0))
     
     loop $loop-start
-      (local.set $rotation (i32.add (local.get $rotation) (call $parse-line)))
-      (local.set $count-zeroes (i32.add (local.get $count-zeroes) (call $eq-zero (local.get $rotation))))
+      (call $handle-row (local.get $rotation) (call $parse-line))
+      drop
+      (local.tee $rotation)
+      (i32.eq (i32.const 0))
+      (local.set $count-zeroes (i32.add (local.get $count-zeroes)))
 
       (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
     end
@@ -99,16 +119,16 @@
   (func $part2 (export "part2") (param $length i32) (result i32)
     (local $rotation i32)
     (local $count-zeroes i32)
-    (local $diff i32)
     
     (local.set $rotation (i32.const 50))
     (local.set $count-zeroes (i32.const 0))
+
+
     
     loop $loop-start
-      (local.set $diff (call $parse-line))
-      (local.get $rotation)
-      (local.tee $rotation (i32.add (local.get $rotation) (local.get $diff)))
-      (local.set $count-zeroes (i32.add (local.get $count-zeroes) (call $pass-thru-zero)))
+      (call $handle-row (local.get $rotation) (call $parse-line))
+      (local.set $count-zeroes (i32.add (local.get $count-zeroes)))
+      (local.set $rotation)
 
       (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
     end
