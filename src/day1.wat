@@ -1,5 +1,9 @@
 (module
   (memory (import "import" "file") 1)
+  (func $__log (import "console" "log") (param i32))
+  (func $log (param $p i32) (result i32)
+    (call $__log (local.get $p))
+    (return (local.get $p)))
   
   (global $offset (mut i32) (i32.const 0))
 
@@ -62,10 +66,12 @@
     (if (result i32) (i32.lt_s (local.get $start) (i32.const 0))
       (then (i32.add (i32.const -1) (local.get $scratch)))
       (else (local.get $scratch)))
+    call $log
     (local.set $scratch (i32.div_s (local.get $end) (i32.const 100)))
     (if (result i32) (i32.lt_s (local.get $end) (i32.const 0))
       (then (i32.add (i32.const -1) (local.get $scratch)))
       (else (local.get $scratch)))
+    call $log
     (local.set $changes (i32.sub))
 
     (if (result i32) (i32.lt_s (local.get $changes) (i32.const 0))

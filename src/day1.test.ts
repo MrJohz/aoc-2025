@@ -11,7 +11,10 @@ type Exports = {
 
 const compile = async (options: WebAssembly.Imports) => {
   const wasm = await readFile(new URL("./day1.wasm", import.meta.url));
-  return await WebAssembly.instantiate(wasm, options);
+  return await WebAssembly.instantiate(wasm, {
+    ...options,
+    console: { log: console.log },
+  });
 };
 
 const createMemory = (text: Buffer) => {
