@@ -112,8 +112,6 @@
     
     (local.set $rotation (i32.const 50))
     (local.set $count-zeroes (i32.const 0))
-
-
     
     loop $loop-start
       (call $handle-row (local.get $rotation) (call $parse-line))
