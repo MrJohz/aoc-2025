@@ -47,8 +47,7 @@
       (br_if $start)
     end
 
-    (return (local.get $result))
-)
+    (return (local.get $result)))
   
   (func $find-largest-2 (export "findlargest2") (result i32)
     (local $largest i32)
@@ -127,10 +126,53 @@
 
 
     (return (call $sum-bytes (local.get $arr) (i32.const 12))))
+  
+  (func $find-largest-n (export "findlargestn") (param $arr i32) (param $n i32) (result i64)
+    (local $ptr i32)
+    (local $len i32)
+
+    (memory.copy (local.get $arr) (global.get $offset) (local.get $n))
+    (global.set $offset (i32.add (global.get $offset) (local.get $n)))
+
+    block $outer-end
+    loop $outer-start
+      (br_if $outer-end (i32.eq (i32.const 10) (call $read-byte)))
+
+      (local.set $ptr (i32.const 0))
+
+      block $inner-end
+      loop $inner-start
+        (local.set $len (i32.sub (local.get $n) (local.get $ptr)))
+        (i32.lt_s
+          (call $read-byte-at (i32.add (local.get $ptr) (local.get $arr)))
+          (call $read-byte-at (i32.sub (global.get $offset) (local.get $len))))
+        (if
+          (then
+            (memory.copy
+              (i32.add (local.get $ptr) (local.get $arr))
+              (i32.sub (global.get $offset) (local.get $len))
+              (local.get $len))
+            br $inner-end))
+
+        (local.set $ptr (i32.add (local.get $ptr) (i32.const 1)))
+        (if (i32.gt_s (local.get $ptr) (local.get $n))
+          (then br $inner-end))
+
+        br $inner-start
+      end
+      end
+
+      br $outer-start
+    end
+    end
+
+
+    (return (call $sum-bytes (local.get $arr) (local.get $n))))
 
   (func $part1 (export "part1") (param $length i32) (result i32)
     (local $sum i32)
     (local.set $sum (i32.const 0))
+    (global.set $offset (i32.const 0))
   
     loop $loop-start
       (local.set $sum
@@ -146,12 +188,29 @@
   (func $part2 (export "part2") (param $length i32) (result i64)
     (local $sum i64)
     (local.set $sum (i64.const 0))
+    (global.set $offset (i32.const 0))
   
     loop $loop-start
       (local.set $sum
         (i64.add
           (local.get $sum)
           (call $find-largest-12 (local.get $length))))
+
+      (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
+    end
+    
+    (return (local.get $sum)))
+
+  (func $partn (export "partn") (param $length i32) (param $n i32) (result i64)
+    (local $sum i64)
+    (local.set $sum (i64.const 0))
+    (global.set $offset (i32.const 0))
+  
+    loop $loop-start
+      (local.set $sum
+        (i64.add
+          (local.get $sum)
+          (call $find-largest-n (local.get $length) (local.get $n))))
 
       (br_if $loop-start (i32.lt_s (global.get $offset) (local.get $length)))
     end

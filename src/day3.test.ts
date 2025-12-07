@@ -91,6 +91,6 @@ test("day three", (t: TestContext) => {
     const { instance } = await compile(file);
     const exports = instance.exports as Exports;
 
-    t.assert.equal(exports.part2(length), 17430);
+    t.assert.equal(exports.part2(length), 171975854269367n);
   });
 });
