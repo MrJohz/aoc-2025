@@ -23,7 +23,8 @@ outputs = { auto = true }
 run = '''
 {% for file in task_source_files() %}
 wat2wasm {{ file }} -o {{ file | replace(from=".wat", to=".wasm") }} \
-  --enable-tail-call
+  --enable-tail-call \
+  --enable-multi-memory
 {% endfor %}
 '''
 
